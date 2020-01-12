@@ -14,6 +14,7 @@ from pptx.exc import InvalidXmlError
 from pptx.util import Centipoints, Emu
 
 
+
 class BaseSimpleType(object):
     @classmethod
     def from_xml(cls, str_value):
@@ -122,6 +123,40 @@ class BaseStringEnumerationType(BaseStringType):
         cls.validate_string(value)
         if value not in cls._members:
             raise ValueError("must be one of %s, got '%s'" % (cls._members, value))
+
+
+class ST_CapType(BaseStringEnumerationType):
+    FLAT = 'flat'
+    ROUND = 'rnd'
+    _member = (FLAT, ROUND)
+
+class ST_EdgeType(BaseStringEnumerationType):
+    DOUBLE = 'dbl'
+    SINGLE = 'sng'
+    THICKTHIN = 'thickThin'
+    THINTHICK = 'thinThick'
+    TRIPLE = 'tri'
+    _member = (DOUBLE, SINGLE, THICKTHIN,THINTHICK, TRIPLE)
+
+class ST_EdgeAlignment(BaseStringEnumerationType):
+    CENTER = 'ctr'
+    IN = 'in'
+    _member = (CENTER, IN)
+
+class ST_LineEndType(BaseStringEnumerationType):
+    ARROW = 'arrow'
+    DIAMOND = 'diamond'
+    NONE = 'none'
+    OVAL = 'oval'
+    STEALTH = 'stealth'
+    TRIANGLE = 'triangle'
+    _member = (ARROW, DIAMOND,NONE,OVAL,STEALTH,TRIANGLE)
+
+class ST_ReletiveSize(BaseStringEnumerationType):
+    SMALL = 'sm'
+    MEDIUM = 'med'
+    LARGE = 'lg'
+    _member = (SMALL, MEDIUM, LARGE)
 
 
 class XsdAnyUri(BaseStringType):

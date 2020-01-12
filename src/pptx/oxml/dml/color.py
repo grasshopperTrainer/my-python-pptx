@@ -107,9 +107,15 @@ class CT_SRgbColor(_BaseColorElement):
     """
 
     val = RequiredAttribute("val", ST_HexColorRGB)
-
+    alpha = ZeroOrOne("a:alpha")
 
 class CT_SystemColor(_BaseColorElement):
     """
     Custom element class for <a:sysClr> element.
+    """
+
+class CT_Alpha(_BaseColorElement):
+    val = RequiredAttribute("val", ST_Percentage)
+    """
+    Custom element class for <a:alpha> element.
     """

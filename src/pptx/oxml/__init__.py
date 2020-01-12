@@ -230,6 +230,7 @@ from .dml.color import (  # noqa: E402
     CT_ScRgbColor,
     CT_SRgbColor,
     CT_SystemColor,
+    CT_Alpha,
 )
 
 register_element_cls("a:bgClr", CT_Color)
@@ -242,6 +243,7 @@ register_element_cls("a:schemeClr", CT_SchemeColor)
 register_element_cls("a:scrgbClr", CT_ScRgbColor)
 register_element_cls("a:srgbClr", CT_SRgbColor)
 register_element_cls("a:sysClr", CT_SystemColor)
+register_element_cls("a:alpha", CT_Alpha)
 
 
 from .dml.fill import (  # noqa: E402
@@ -271,9 +273,23 @@ register_element_cls("a:solidFill", CT_SolidColorFillProperties)
 register_element_cls("a:srcRect", CT_RelativeRect)
 
 
-from .dml.line import CT_PresetLineDashProperties  # noqa: E402
+from .dml.line import (  # noqa: E402
+    CT_PresetLineDashProperties,
+    CT_TableCellEdgeLeft,
+    CT_TableCellEdgeRight,
+    CT_TableCellEdgeTop,
+    CT_TableCellEdgeBottom,
+    CT_LineHeadEnd,
+    CT_LineTailEnd,
+)
 
 register_element_cls("a:prstDash", CT_PresetLineDashProperties)
+register_element_cls("a:lnL", CT_TableCellEdgeLeft)
+register_element_cls("a:lnR", CT_TableCellEdgeRight)
+register_element_cls("a:lnT", CT_TableCellEdgeTop)
+register_element_cls("a:lnB", CT_TableCellEdgeBottom)
+register_element_cls("a:headEnd", CT_LineHeadEnd)
+register_element_cls("a:tailEnd", CT_LineTailEnd)
 
 
 from .presentation import (  # noqa: E402

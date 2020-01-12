@@ -5,7 +5,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from pptx.compat import Sequence
-from pptx.dml.color import ColorFormat
+from pptx.dml.color import ColorFormat,RGBColor
 from pptx.enum.dml import MSO_FILL
 from pptx.oxml.dml.fill import (
     CT_BlipFillProperties,
@@ -17,7 +17,7 @@ from pptx.oxml.dml.fill import (
 )
 from pptx.shared import ElementProxy
 from pptx.util import lazyproperty
-
+from collections import namedtuple
 
 class FillFormat(object):
     """
@@ -64,6 +64,17 @@ class FillFormat(object):
         this fill.
         """
         return self._fill.fore_color
+
+    @property
+    def color(self):
+        fc = namedtuple(typename='fore_color', field_names='t,rgba')
+        bc = namedtuple(typename='back_color', field_names='t,rgba')
+        if isinstance(self._fill, _SolidFill):
+            fc.t = self._fill
+            fc.rgba = *self._fill.fore_color._color.rgb,self._fill.fore_color._color.alpha
+            return fc
+        else:
+            raise NotImplementedError
 
     def gradient(self):
         """Sets the fill type to gradient.
@@ -140,7 +151,7 @@ class FillFormat(object):
         pattFill = self._xPr.get_or_change_to_pattFill()
         self._fill = _PattFill(pattFill)
 
-    def solid(self):
+    def solid(self,r,g,b,a=1.0):
         """
         Sets the fill type to solid, i.e. a solid color. Note that calling
         this method does not set a color or by itself cause the shape to
@@ -149,6 +160,8 @@ class FillFormat(object):
         """
         solidFill = self._xPr.get_or_change_to_solidFill()
         self._fill = _SolidFill(solidFill)
+        self._fill.fore_color.rgb = RGBColor(r,g,b)
+        self._fill.fore_color._color._srgbClr._add_alpha(val=a)
 
     @property
     def type(self):

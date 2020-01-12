@@ -6,7 +6,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from pptx.enum.text import MSO_VERTICAL_ANCHOR
 from pptx.oxml import parse_xml
-from pptx.oxml.dml.fill import CT_GradientFillProperties
+from pptx.oxml.dml.fill import CT_GradientFillProperties,CT_SolidColorFillProperties
 from pptx.oxml.ns import nsdecls
 from pptx.oxml.simpletypes import ST_Coordinate, ST_Coordinate32, XsdBoolean, XsdInt
 from pptx.oxml.text import CT_TextBody
@@ -371,11 +371,19 @@ class CT_TableCellProperties(BaseOxmlElement):
         ),
         successors=("a:headers", "a:extLst"),
     )
+    _tag_seq = ("a:lnL", "a:lnR", "a:lnT", "a:lnB")
+    lnL = ZeroOrOne(nsptagname=_tag_seq[0],successors=_tag_seq[1:])
+    lnR = ZeroOrOne(nsptagname=_tag_seq[1],successors=_tag_seq[2:])
+    lnT = ZeroOrOne(nsptagname=_tag_seq[2],successors=_tag_seq[3:])
+    lnB = ZeroOrOne(nsptagname=_tag_seq[3])
+    del _tag_seq
+
     anchor = OptionalAttribute("anchor", MSO_VERTICAL_ANCHOR)
     marL = OptionalAttribute("marL", ST_Coordinate32)
     marR = OptionalAttribute("marR", ST_Coordinate32)
     marT = OptionalAttribute("marT", ST_Coordinate32)
     marB = OptionalAttribute("marB", ST_Coordinate32)
+
 
     def _new_gradFill(self):
         return CT_GradientFillProperties.new_gradFill()

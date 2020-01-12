@@ -20,9 +20,12 @@ table.delete_column()
 table.join_table(table2,trim=False,pos=1)
 
 # testing flipped access to cell object
-a = table.rows[1].cells[0]
-b = table.columns[0].cells[1]
-print(a._tc == b._tc)
-
+a = table.rows[1].cells
+b = table.columns[0].cells
+print(a[0] == b[1])
+c = table.columns[1].cells[1]
+c.fill.solid(255,0,0,0.5)
+print(c.edge.bottom._lnx.xml)
+print(c.edge.bottom._lnx.getparent().xml)
 
 p.save('test.pptx')

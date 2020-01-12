@@ -265,6 +265,13 @@ class _SRgbColor(_Color):
         """
         return RGBColor.from_string(self._srgbClr.val)
 
+    @property
+    def alpha(self):
+        try:
+           return self._srgbClr.alpha.val
+        except:
+            return 1.0
+
     @rgb.setter
     def rgb(self, rgb):
         self._srgbClr.val = str(rgb)

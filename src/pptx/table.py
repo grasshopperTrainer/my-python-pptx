@@ -7,11 +7,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from pptx.compat import is_integer
 from pptx.dml.fill import FillFormat
 from pptx.oxml.table import TcRange,CT_TableCell
+from pptx.oxml.dml.line import CT_TableCellEdgeLeft, CT_TableCellEdgeRight, CT_TableCellEdgeTop, CT_TableCellEdgeBottom
 from pptx.oxml.xmlchemy import serialize_for_reading
 from pptx.shapes import Subshape
 from pptx.text.text import TextFrame
 from pptx.util import lazyproperty
 from pptx.util import Length
+from pptx.dml.line import LineFormat
 import copy
 
 class Table(object):
@@ -318,6 +320,54 @@ class Table(object):
             ss = to_join._graphic_frame._parent
             ss._spTree.remove(to_join._graphic_frame._element)
 
+class _CellEdge:
+    def __init__(self, tc):
+        self._tc = tc
+
+    @property
+    def _lnL(self):
+        return self._tc.tcPr.lnL
+    @property
+    def _lnR(self):
+        return self._tc.tcPr.lnR
+    @property
+    def _lnT(self):
+        return self._tc.tcPr.lnT
+    @property
+    def _lnB(self):
+        return self._tc.tcPr.lnB
+
+    @property
+    def left(self):
+        return _Edge(self._tc.tcPr, self._tc.get_or_add_lnL)
+    @property
+    def right(self):
+        return _Edge(self._tc.tcPr, self._tc.get_or_add_lnR)
+    @property
+    def top(self):
+        return _Edge(self._tc.tcPr, self._tc.get_or_add_lnT)
+    @property
+    def bottom(self):
+        return _Edge(self._tc.tcPr, self._tc.tcPr.get_or_add_lnB())
+
+    def solid(self, r,g,b,a):
+        pass
+
+class _Edge:
+    def __init__(self, tcPr, lnx):
+        self._tcPr = tcPr
+        self._lnx = lnx
+
+# class _CellEdgeLeft(_Edge):
+#     pass
+# class _CellEdgeRight(_Edge):
+#     pass
+# class _CellEdgeTop(_Edge):
+#     pass
+# class _CellEdgeBottom(_Edge):
+#     pass
+
+
 class _Cell(Subshape):
     """Table cell"""
 
@@ -348,6 +398,10 @@ class _Cell(Subshape):
         """
         tcPr = self._tc.get_or_add_tcPr()
         return FillFormat.from_fill_parent(tcPr)
+
+    @lazyproperty
+    def edge(self):
+        return _CellEdge(self._tc)
 
     @property
     def is_merge_origin(self):
@@ -576,8 +630,12 @@ class _Column(Subshape):
 
     @property
     def cells(self):
-        return _CellCollection(self._gridCol, self)
-
+        col_idx = self._gridCol.getparent().index(self._gridCol)
+        tbl = self._gridCol.getparent().getparent()
+        tcs = []
+        for r in tbl.tr_lst:
+            tcs.append(r.tc_lst[col_idx])
+        return _CellCollection(tcs, self)
 
 class _Row(Subshape):
     """Table row"""
@@ -592,7 +650,7 @@ class _Row(Subshape):
         Read-only reference to collection of cells in row. An individual cell
         is referenced using list notation, e.g. ``cell = row.cells[0]``.
         """
-        return _CellCollection(self._tr, self)
+        return _CellCollection(self._tr.tc_lst, self)
 
     @property
     def height(self):
@@ -610,48 +668,36 @@ class _Row(Subshape):
 class _CellCollection(Subshape):
     """Horizontal sequence of row cells"""
 
-    def __init__(self, tr_tc, parent):
+    def __init__(self, tcs, parent):
         """
         Wrapper class for indexing cells from row or column.
         :param tr_tc: <CT_TableRow> or <CT_TableCol>
         :param parent: <_Row> or <_Column>
         """
         super(_CellCollection, self).__init__(parent)
-        self._tr_tc = tr_tc
+        self._tcs = tcs
 
     def __getitem__(self, idx):
         """Provides indexed access, (e.g. 'cells[0]')."""
-        if isinstance(self._parent, _Row):
-            if idx < 0:
-                col_idx = len(self._tr_tc.tc_lst) + idx
-            else:
-                col_idx = idx
-            if col_idx < 0 or col_idx >= len(self._tr_tc.tc_lst):
-                msg = "cell index [%d] out of range" % idx
-                raise IndexError(msg)
-            return _Cell(self._tr_tc.tc_lst[col_idx], self)
+        if isinstance(idx, int):
+            return _Cell(self._tcs[idx], self)
 
-        elif isinstance(self._parent, _Column):
-            tbl = self._tr_tc.getparent().getparent()
-            if idx < 0:
-                row_idx = len(tbl.tr_lst) + idx
-            else:
-                row_idx = idx
-            if row_idx < 0 or row_idx >= len(tbl.tr_lst):
-                msg = "cell index [%d] out of range" % idx
-                raise IndexError(msg)
-            for col_idx,gc in enumerate(self._tr_tc.getparent().gridCol_lst):
-                if gc == self._tr_tc:
-                    break
-            return _Cell(tbl.tr_lst[row_idx].tc_lst[col_idx], self)
+        elif isinstance(idx, slice):
+            start = 0 if idx.start is None else idx.start
+            stop = len(self._tcs) if idx.stop is None else idx.stop
+            step = 1 if idx.step is None else idx.step
+            cc = _CellCollection([self._tcs[i] for i in range(start, stop, step)], self)
+            return cc
+        else:
+            raise TypeError
 
     def __iter__(self):
         """Provides iterability."""
-        return (_Cell(tc, self) for tc in self._tr_tc.tc_lst)
+        return (_Cell(tc, self) for tc in self._tcs)
 
     def __len__(self):
         """Supports len() function (e.g. 'len(cells) == 1')."""
-        return len(self._tr_tc.tc_lst)
+        return len(self._tcs)
 
 
 class _ColumnCollection(Subshape):
