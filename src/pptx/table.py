@@ -88,6 +88,12 @@ class Table(object):
         Each grid cell is generated in left-to-right, top-to-bottom order.
         """
         return (_Cell(tc, self) for tc in self._tbl.iter_tcs())
+    def iter_real_cells(self):
+        """
+        Return cells with no merged
+        :return:
+        """
+        return (_Cell(tc, self) for tc in self._tbl.iter_tcs() if not tc.is_spanned)
 
     @property
     def last_col(self):
@@ -320,35 +326,61 @@ class Table(object):
             ss = to_join._graphic_frame._parent
             ss._spTree.remove(to_join._graphic_frame._element)
 
+    def cell_idx(self, cell):
+        if not isinstance(cell, _Cell):
+            raise
+
+        tc = cell._tc
+        tr = tc.getparent()
+
+        for i, c in enumerate(tr.tc_lst):
+            if c == tc:
+                col_idx = i
+                break
+
+        row_idx = None
+        for i, r in enumerate(self._tbl.tr_lst):
+            if r == tr:
+                row_idx = i
+                break
+
+        return row_idx, col_idx
+
 class _CellEdge:
     def __init__(self, tc):
         self._tc = tc
 
     @property
-    def _lnL(self):
-        return self._tc.tcPr.lnL
-    @property
-    def _lnR(self):
-        return self._tc.tcPr.lnR
-    @property
-    def _lnT(self):
-        return self._tc.tcPr.lnT
-    @property
-    def _lnB(self):
-        return self._tc.tcPr.lnB
-
-    @property
     def left(self):
-        return _Edge(self._tc.tcPr, self._tc.get_or_add_lnL)
+        if self._tc.tcPr.lnL is None:
+            self._add_default_edge('L')
+        return _Edge(self._tc.tcPr, self._tc.get_or_add_lnL())
     @property
     def right(self):
-        return _Edge(self._tc.tcPr, self._tc.get_or_add_lnR)
+        if self._tc.tcPr.lnR is None:
+            self._add_default_edge('R')
+        return _Edge(self._tc.tcPr, self._tc.get_or_add_lnR())
     @property
     def top(self):
-        return _Edge(self._tc.tcPr, self._tc.get_or_add_lnT)
+        if self._tc.tcPr.lnT is None:
+            self._add_default_edge('T')
+        return _Edge(self._tc.tcPr, self._tc.get_or_add_lnT())
     @property
     def bottom(self):
+        if self._tc.tcPr.lnB is None:
+            self._add_default_edge('B')
         return _Edge(self._tc.tcPr, self._tc.tcPr.get_or_add_lnB())
+
+    def _add_default_edge(self, pos):
+        ln = eval(f"self._tc.tcPr._add_ln{pos}(w=12700, cap='flat', cmpd='sng', algn='ctr')")
+        sf = ln._add_solidFill()
+        srgb = sf._add_srgbClr(val='FFFFFF')
+        srgb._add_alpha(val=1.0)
+        ln._add_round()
+        ln._add_prstDash(val=1)
+        ln._add_headEnd(type='none', w='med', len='med')
+        ln._add_tailEnd(type='none', w='med', len='med')
+        return ln
 
     def solid(self, r,g,b,a):
         pass
@@ -357,6 +389,11 @@ class _Edge:
     def __init__(self, tcPr, lnx):
         self._tcPr = tcPr
         self._lnx = lnx
+
+    def solid(self, r,g,b,a=1.0):
+        pass
+
+
 
 # class _CellEdgeLeft(_Edge):
 #     pass
@@ -607,6 +644,58 @@ class _Cell(Subshape):
         if not is_integer(margin_value) and margin_value is not None:
             tmpl = "margin value must be integer or None, got '%s'"
             raise TypeError(tmpl % margin_value)
+
+    def coordinate(self,i):
+        """
+        # TODO
+        :param i:
+        :return:
+        """
+        if not isinstance(i, int):
+            raise TypeError
+        row_idx, col_idx = self._parent.cell_idx(self)
+        tbl = self._tc.getparent().getparent()
+        # table is inside graphic frame. Graphic frame is a thing that's inside slide.
+        gf = tbl.getparent().getparent().getparent()
+        top_left = [gf.x,gf.y]
+
+        for tr in tbl.tr_lst[:row_idx]:
+            top_left[1] += tr.h
+
+        for gc in tbl.tblGrid.gridCol_lst[:col_idx]:
+            top_left[0] += gc.w
+
+        if i == 0:
+            return tuple(top_left)
+        elif i == 1:
+            pass
+        elif i == 2:
+            pass
+        elif i == 3:
+            pass
+        elif i == 4:
+            x = top_left[0] + self.width/2
+            y = top_left[1] + self.height/2
+            return x,y
+        else:
+            raise ValueError
+
+    @property
+    def width(self):
+        row_idx, col_idx = self._parent.cell_idx(self)
+        tbl = self._tc.getparent().getparent()
+        w = 0
+        if self._tc.is_merge_origin:
+             for gc in tbl.tblGrid.gridCol_lst[col_idx:col_idx+self._tc.gridSpan]:
+                 w += gc.w
+             return w
+
+        else:
+            return tbl.tblGrid.gridCol_lst[col_idx].w
+
+    @property
+    def height(self):
+        return self._tc.getparent().h
 
 
 class _Column(Subshape):

@@ -607,12 +607,13 @@ class ZeroOrOne(_BaseChildElement):
         self._add_get_or_adder()
         self._add_remover()
 
+
     def _add_get_or_adder(self):
         """
         Add a ``get_or_add_x()`` method to the element class for this
         child element.
         """
-
+        # TODO seems like this does not match meaning of 'zero or one'
         def get_or_add_child(obj):
             child = getattr(obj, self._prop_name)
             if child is None:

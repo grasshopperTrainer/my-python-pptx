@@ -128,7 +128,7 @@ class BaseStringEnumerationType(BaseStringType):
 class ST_CapType(BaseStringEnumerationType):
     FLAT = 'flat'
     ROUND = 'rnd'
-    _member = (FLAT, ROUND)
+    _members = (FLAT, ROUND)
 
 class ST_EdgeType(BaseStringEnumerationType):
     DOUBLE = 'dbl'
@@ -136,12 +136,12 @@ class ST_EdgeType(BaseStringEnumerationType):
     THICKTHIN = 'thickThin'
     THINTHICK = 'thinThick'
     TRIPLE = 'tri'
-    _member = (DOUBLE, SINGLE, THICKTHIN,THINTHICK, TRIPLE)
+    _members = (DOUBLE, SINGLE, THICKTHIN,THINTHICK, TRIPLE)
 
 class ST_EdgeAlignment(BaseStringEnumerationType):
     CENTER = 'ctr'
     IN = 'in'
-    _member = (CENTER, IN)
+    _members = (CENTER, IN)
 
 class ST_LineEndType(BaseStringEnumerationType):
     ARROW = 'arrow'
@@ -150,13 +150,13 @@ class ST_LineEndType(BaseStringEnumerationType):
     OVAL = 'oval'
     STEALTH = 'stealth'
     TRIANGLE = 'triangle'
-    _member = (ARROW, DIAMOND,NONE,OVAL,STEALTH,TRIANGLE)
+    _members = (ARROW, DIAMOND,NONE,OVAL,STEALTH,TRIANGLE)
 
 class ST_ReletiveSize(BaseStringEnumerationType):
     SMALL = 'sm'
     MEDIUM = 'med'
     LARGE = 'lg'
-    _member = (SMALL, MEDIUM, LARGE)
+    _members = (SMALL, MEDIUM, LARGE)
 
 
 class XsdAnyUri(BaseStringType):

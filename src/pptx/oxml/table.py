@@ -371,11 +371,11 @@ class CT_TableCellProperties(BaseOxmlElement):
         ),
         successors=("a:headers", "a:extLst"),
     )
-    _tag_seq = ("a:lnL", "a:lnR", "a:lnT", "a:lnB")
+    _tag_seq = ('a:lnL', 'a:lnR', 'a:lnT', 'a:lnB', 'a:solidFill')
     lnL = ZeroOrOne(nsptagname=_tag_seq[0],successors=_tag_seq[1:])
     lnR = ZeroOrOne(nsptagname=_tag_seq[1],successors=_tag_seq[2:])
     lnT = ZeroOrOne(nsptagname=_tag_seq[2],successors=_tag_seq[3:])
-    lnB = ZeroOrOne(nsptagname=_tag_seq[3])
+    lnB = ZeroOrOne(nsptagname=_tag_seq[3],successors=_tag_seq[4:])
     del _tag_seq
 
     anchor = OptionalAttribute("anchor", MSO_VERTICAL_ANCHOR)

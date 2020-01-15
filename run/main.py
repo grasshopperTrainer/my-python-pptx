@@ -1,6 +1,9 @@
 import pptx
+import openpyexcel as excel
 from pptx.util import Cm as cm
 from pptx.oxml.xmlchemy import serialize_for_reading
+import math
+import pathlib
 
 p = pptx.Presentation()
 layout = p.slide_layouts[0]
@@ -24,8 +27,14 @@ a = table.rows[1].cells
 b = table.columns[0].cells
 print(a[0] == b[1])
 c = table.columns[1].cells[1]
-c.fill.solid(255,0,0,0.5)
-print(c.edge.bottom._lnx.xml)
-print(c.edge.bottom._lnx.getparent().xml)
+# c.fill.solid(255,0,0,0.5)
+# print(c.edge.bottom._lnx.xml)
 
-p.save('test.pptx')
+
+p = pptx.Presentation()
+layout = p.slide_layouts[0]
+a3_size = 42.0,29.7
+p.slide_width, p.slide_height = cm(a3_size[0]), cm(a3_size[1])
+# slide = p.slides.add_slide(layout)
+# table_frame = slide.shapes.add_table(rows=5, cols=3, left=0, top=0, width=cm(10), height=cm(10))
+

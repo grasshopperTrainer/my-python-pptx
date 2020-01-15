@@ -3,7 +3,7 @@
 """The shape tree, the structure that holds a slide's shapes."""
 
 from __future__ import absolute_import, division, print_function, unicode_literals
-
+import copy
 from pptx.compat import BytesIO
 from pptx.enum.shapes import PP_PLACEHOLDER
 from pptx.media import SPEAKER_IMAGE_BYTES, Video
@@ -12,6 +12,7 @@ from pptx.oxml.ns import qn
 from pptx.oxml.shapes.graphfrm import CT_GraphicalObjectFrame
 from pptx.oxml.shapes.picture import CT_Picture
 from pptx.oxml.simpletypes import ST_Direction
+from pptx.oxml.table import CT_Table
 from pptx.shapes.autoshape import AutoShapeType, Shape
 from pptx.shapes.base import BaseShape
 from pptx.shapes.connector import Connector
@@ -105,6 +106,9 @@ class _BaseShapes(ParentedElementProxy):
         id_ = self._next_shape_id
         name = self._next_ph_name(ph_type, id_, orient)
         self._spTree.add_placeholder(id_, name, ph_type, orient, sz, idx)
+
+    def clear_all(self):
+        self._spTree.clear()
 
     def ph_basename(self, ph_type):
         """
@@ -498,6 +502,20 @@ class SlideShapes(_BaseGroupShapes):
         self._add_video_timing(movie_pic)
         return self._shape_factory(movie_pic)
 
+    def insert_table(self, i, table):
+        if not isinstance(table, GraphicFrame):
+            raise TypeError
+        if not table.has_table:
+            raise
+        tbl = copy.deepcopy(table._element)
+        new_id = self._next_shape_id
+        tbl._nvXxPr.cNvPr.id = new_id
+        tbl._nvXxPr.cNvPr.name = f'Table {new_id-1}'
+        self._spTree.insert(i,tbl)
+
+    def append_table(self, table):
+        self.insert_table(-1, table)
+
     def add_table(self, rows, cols, left, top, width, height):
         """
         Add a |GraphicFrame| object containing a table with the specified
@@ -511,7 +529,17 @@ class SlideShapes(_BaseGroupShapes):
             rows, cols, left, top, width, height
         )
         graphic_frame = self._shape_factory(graphicFrame)
+
         return graphic_frame
+
+    def new_table(self, rows, cols, left, top, width, height):
+        _id = -1
+        name = "Table %d" % (_id)
+        graphicFrame = CT_GraphicalObjectFrame()
+        gf_tbl = graphicFrame.new_table_graphicFrame(_id,name,rows,cols,left, top, width, height)
+        return self._shape_factory(gf_tbl)
+
+
 
     def clone_layout_placeholders(self, slide_layout):
         """

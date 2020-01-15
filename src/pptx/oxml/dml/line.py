@@ -26,7 +26,7 @@ class _CT_TableCellEdge(BaseOxmlElement):
     """
     w = RequiredAttribute('w', ST_Coordinate)
     cap = RequiredAttribute('cap', ST_CapType)
-    cmpd = RequiredAttribute('cm    pd', ST_EdgeType)
+    cmpd = RequiredAttribute('cmpd', ST_EdgeType)
     algn = RequiredAttribute('algn', ST_EdgeAlignment)
 
     _tag_seq = ('a:prstDash', 'a:headEnd', 'a:tailEnd')
@@ -50,7 +50,7 @@ class _CT_TableCellEdge(BaseOxmlElement):
 
     prstDash = ZeroOrOne('a:prstDash', successors=('a:headEnd','a:bevel','a:miter','a:round','a:tailEnd'))
     headEnd = ZeroOrOne('a:headEnd', successors=_tag_seq[2:])
-    tailEnd = ZeroOrOne('a:prstDash')
+    tailEnd = ZeroOrOne('a:tailEnd')
     del _tag_seq
 
 class CT_TableCellEdgeLeft(_CT_TableCellEdge):
