@@ -7,8 +7,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from pptx.action import ActionSetting
 from pptx.dml.effect import ShadowFormat
 from pptx.shared import ElementProxy
-from pptx.util import lazyproperty
-
+from pptx.util import lazyproperty, Emu, Length
 
 class BaseShape(object):
     """Base class for shape objects.
@@ -35,6 +34,55 @@ class BaseShape(object):
         if not isinstance(other, BaseShape):
             return True
         return self._element is not other._element
+
+    def coordinate(self, idx):
+        if not isinstance(idx, int):
+            raise TypeError
+
+        top_left = [self._element.x, self._element.y]
+        w,h = self._element.cx, self._element.cy
+
+        if idx == 0:
+            return tuple(top_left)
+        elif idx == 1:
+            return Emu(top_left[0]+ w), Emu(top_left[1])
+        elif idx == 2:
+            return Emu(top_left[0]+w), Emu(top_left[1]+h)
+        elif idx == 3:
+            return Emu(top_left[0]), Emu(top_left[1]+h)
+        elif idx == 4:
+            return Emu(top_left[0]+w/2), Emu(top_left[1]+h/2)
+        else:
+            raise ValueError
+
+    def orient(self, x,y, ref_idx=0):
+        """
+        Change position of shape by placing vertex[ref_idx] to position x,y
+        :param x: destination x
+        :param y: destination y
+        :param ref_idx: reference vertex to move with
+        :return:
+        """
+        if not isinstance(ref_idx, int):
+            raise TypeError
+        if not isinstance(x, Length) or not isinstance(y, Length):
+            raise TypeError
+
+        if ref_idx == 0:
+            self._element.x = x
+            self._element.y = y
+        elif ref_idx == 1:
+            self._element.x = Emu(x-self._element.cx)
+        elif ref_idx == 2:
+            self._element.x = Emu(x-self._element.cx)
+            self._element.y = Emu(y-self._element.cy)
+        elif ref_idx == 3:
+            self._element.y = Emu(y-self._element.cy)
+        elif ref_idx == 4:
+            self._element.x = Emu(x-self._element.cx/2)
+            self._element.y = Emu(y-self._element.cy/2)
+        else:
+            raise ValueError
 
     @lazyproperty
     def click_action(self):

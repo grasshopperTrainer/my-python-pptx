@@ -294,6 +294,30 @@ class Slides(ParentedElementProxy):
         self._sldIdLst.add_sldId(rId)
         return slide
 
+    def new_slide(self, slide_layout):
+        """
+        Makes <Slide> object but doesn't add to the presentation.
+        It can be later appended into the presentation through
+        <Slides.append_slide> or <Slides.insert_slide>.
+        :param slide_layout:
+        :return:
+        """
+        rId, slide = self.part.add_slide(slide_layout)
+        slide.shapes.clone_layout_placeholders(slide_layout)
+        print(self.part)
+        print(rId, slide)
+        rId, slide = self.part.add_slide(slide_layout)
+        print(rId, slide)
+
+        exit()
+        return slide
+
+    def insert_slide(self, i, slide):
+        pass
+
+    def append_slide(self,slide):
+        self.insert_slide(-1, slide)
+
     def get(self, slide_id, default=None):
         """
         Return the slide identified by integer *slide_id* in this

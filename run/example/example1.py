@@ -1,3 +1,9 @@
+import pptx
+import openpyexcel as excel
+import math
+import pathlib
+from pptx.util import Cm as cm
+
 exl_book = excel.load_workbook('C:/Users/dingo/OneDrive/2020/20191230 박선우 전시/모델 아카이빙.xlsx')
 exl_sheet = exl_book.worksheets[0]
 exl_rows = list(exl_sheet.rows)
@@ -7,8 +13,16 @@ for i,col in enumerate(exl_cols):
     exl_dict[col[1].value] = [c.value for c in col[2:]]
 n = len(list(exl_dict.values())[0])
 
+p = pptx.Presentation()
+layout = p.slide_layouts[0]
+
+a3_size = 42.0,29.7
+p.slide_width = cm(a3_size[0])
+p.slide_height = cm(a3_size[1])
+
 tables = []
-table = slide.shapes.new_table(6,3,cm(0),cm(0),width=cm(a3_size[0]/3), height=cm(a3_size[0]/3))
+table = p.slides.new_slide(layout).shapes.new_table(6,3,cm(0),cm(0),width=cm(a3_size[0]/3), height=cm(a3_size[0]/3))
+
 r1 = 0.5
 r2 = 5
 s = r1*5+r2
@@ -19,10 +33,7 @@ rows[4].cells[0].merge(rows[4].cells[2])
 rows[5].cells[0].merge(rows[5].cells[2])
 
 for c in table.table.iter_cells():
-    c.margin_left = cm(0.05)
-    c.margin_right = cm(0.05)
-    c.margin_top = cm(0.05)
-    c.margin_bottom = cm(0.05)
+    c.margin = cm(0.05)
     run = c.text_frame.paragraphs[0].add_run()
     run.font.size = cm(0.1)
     run.text = ' '
@@ -92,6 +103,7 @@ for i, vs in enumerate(zip(*exl_dict.values())):
         run.font.size = cm(0.4)
         run.text = str(text)
 
+    # cell as a picture frame
     pf_cell = table.table.cell(5,0)
     # putting image
     file_path = f'C:/Users/dingo/OneDrive/2020/20191230 박선우 전시/모델 아카이빙 이미지/{vs[0]}.jpg'
@@ -106,6 +118,7 @@ for i, vs in enumerate(zip(*exl_dict.values())):
             picture.height = cm(picture.height.cm*r)
             picture.width = cm(picture.width.cm*r)
             picture.rotation = -90
+        picture.orient(*pf_cell.coordinate(4), 4)
     slide.shapes.append_table(table)
 
 p.save('모형 정리.pptx')

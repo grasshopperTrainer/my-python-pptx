@@ -12,7 +12,7 @@ from pptx.oxml.xmlchemy import serialize_for_reading
 from pptx.shapes import Subshape
 from pptx.text.text import TextFrame
 from pptx.util import lazyproperty
-from pptx.util import Length
+from pptx.util import Length,Emu
 from pptx.dml.line import LineFormat
 import copy
 
@@ -346,6 +346,7 @@ class Table(object):
 
         return row_idx, col_idx
 
+
 class _CellEdge:
     def __init__(self, tc):
         self._tc = tc
@@ -456,6 +457,25 @@ class _Cell(Subshape):
         cell spans other grid cells, but is not itself a spanned cell.
         """
         return self._tc.is_spanned
+    @property
+    def margin(self):
+        """
+        Return all margin ordered left, right, top, bottom
+        :return:
+        """
+        return self.margin_left, self.margin_right, self.margin_top, self.margin_bottom
+
+    @margin.setter
+    def margin(self, margin):
+        """
+        Sets all margins with equal value
+        :param margin: margin for all four side
+        :return:
+        """
+        self.margin_left = margin
+        self.margin_bottom = margin
+        self.margin_top = margin
+        self.margin_bottom = margin
 
     @property
     def margin_left(self):
@@ -645,58 +665,66 @@ class _Cell(Subshape):
             tmpl = "margin value must be integer or None, got '%s'"
             raise TypeError(tmpl % margin_value)
 
-    def coordinate(self,i):
+    def coordinate(self, idx):
         """
-        # TODO
-        :param i:
+        Return coordinate of cell area ordered starting from top_left going clockwise.
+        :param idx: 0,1,2,3 and 4 for CENTER
         :return:
         """
-        if not isinstance(i, int):
+        if not isinstance(idx, int):
             raise TypeError
         row_idx, col_idx = self._parent.cell_idx(self)
         tbl = self._tc.getparent().getparent()
         # table is inside graphic frame. Graphic frame is a thing that's inside slide.
         gf = tbl.getparent().getparent().getparent()
         top_left = [gf.x,gf.y]
-
         for tr in tbl.tr_lst[:row_idx]:
             top_left[1] += tr.h
-
         for gc in tbl.tblGrid.gridCol_lst[:col_idx]:
             top_left[0] += gc.w
 
-        if i == 0:
-            return tuple(top_left)
-        elif i == 1:
-            pass
-        elif i == 2:
-            pass
-        elif i == 3:
-            pass
-        elif i == 4:
-            x = top_left[0] + self.width/2
-            y = top_left[1] + self.height/2
-            return x,y
+        if idx == 0:
+            return Emu(top_left[0]), Emu(top_left[1])
+        elif idx == 1:
+            return Emu(top_left[0] + self.width), Emu(top_left[1])
+        elif idx == 2:
+            return Emu(top_left[0]) + self.width, Emu(top_left[1] + self.height)
+        elif idx == 3:
+            return Emu(top_left[0]), Emu(top_left[1] + self.height)
+        elif idx == 4:
+            return Emu(top_left[0] + self.width/2), Emu(top_left[1] + self.height/2)
         else:
             raise ValueError
 
     @property
     def width(self):
-        row_idx, col_idx = self._parent.cell_idx(self)
         tbl = self._tc.getparent().getparent()
-        w = 0
+        col_idx = None
+        for i,tc in enumerate(self._tc.getparent().tc_lst):
+            if self._tc == tc:
+                col_idx = i
+                break
         if self._tc.is_merge_origin:
-             for gc in tbl.tblGrid.gridCol_lst[col_idx:col_idx+self._tc.gridSpan]:
-                 w += gc.w
-             return w
-
+            gc = self._tc.getparent().getparent().tblGrid.gridCol_lst[col_idx]
+            w = 0
+            for i in range(self._tc.gridSpan):
+                w += gc.w
+                gc = gc.getnext()
+            return w
         else:
             return tbl.tblGrid.gridCol_lst[col_idx].w
 
     @property
     def height(self):
-        return self._tc.getparent().h
-
+        tr = self._tc.getparent()
+        if self._tc.is_merge_origin:
+            h = 0
+            for i in range(self._tc.rowSpan):
+                h += tr.h
+                tr = tr.getnext()
+            return h
+        else:
+            return tr.h
 
 class _Column(Subshape):
     """Table column"""

@@ -250,8 +250,17 @@ class CT_GroupShape(BaseShapeElement):
 
     def clear(self):
         self.remove_all('p:sp')
+        self.remove_all('p:graphicFrame')
         # to avoid invalid file error
-        self.append(CT_Shape())
+
+        a_nsmap = self.nsmap['a']
+        e = etree.fromstring(f'<a:xfrm xmlns:a = "{a_nsmap}">'
+                             f'<a:off x="0" y="0"/>'
+                             f'<a:ext cx="0" cy="0"/>'
+                             f'<a:chOff x="0" y="0"/>'
+                             f'<a:chExt cx="0" cy="0"/>'
+                             f'</a:xfrm>')
+        self.append(e)
 
 class CT_GroupShapeNonVisual(BaseShapeElement):
     """
