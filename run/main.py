@@ -28,3 +28,10 @@ b = table.columns[0].cells
 print(a[0] == b[1])
 c = table.columns[1].cells[1]
 
+from pptx.virtual.table import Table, Slide
+
+t = Table(rows = 3, cols= 3, left=cm(0), top=cm(0), width=cm(10), height=cm(10))
+s = Slide()
+p = pptx.Presentation()
+s.append_in(p)
+p.save('testt.pptx')
