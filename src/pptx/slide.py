@@ -292,6 +292,7 @@ class Slides(ParentedElementProxy):
         rId, slide = self.part.add_slide(slide_layout)
         slide.shapes.clone_layout_placeholders(slide_layout)
         self._sldIdLst.add_sldId(rId)
+
         return slide
 
     def new_slide(self, slide_layout):

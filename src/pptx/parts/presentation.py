@@ -28,36 +28,7 @@ class PresentationPart(XmlPart):
         partname = self._next_slide_partname
         slide_layout_part = slide_layout.part
         slide_part = SlidePart.new(partname, self.package, slide_layout_part)
-
-        for i in self.package.parts:
-            print(i)
-        print()
-        for i in self.package.rels:
-            print(i)
-
-        print()
         rId = self.relate_to(slide_part, RT.SLIDE)
-        for i in self.package.parts:
-            print(i)
-        print()
-        for i in self.package.rels:
-            print(i)
-        # exit()
-        # TODO
-        # print('partname', partname)
-        # print('slide_layout part', slide_layout_part)
-        # print('slide part', slide_part)
-        # print(RT.SLIDE)
-        # print(self.package)
-        # print(self.package.__dir__())
-        # print(list(self.package.iter_rels()))
-        # print(self)
-        # print(self.__dir__())
-        # print(self.rels)
-        # print(type(self.rels))
-        # print(self.rels.__dir__())
-        # print(self.rels.xml)
-        # exit()
         return rId, slide_part.slide
 
     @property

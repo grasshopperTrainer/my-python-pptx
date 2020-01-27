@@ -162,6 +162,7 @@ class SlidePart(BaseSlidePart):
         """
         sld = CT_Slide.new()
         slide_part = cls(partname, CT.PML_SLIDE, sld, package)
+
         slide_part.relate_to(slide_layout_part, RT.SLIDE_LAYOUT)
         return slide_part
 
