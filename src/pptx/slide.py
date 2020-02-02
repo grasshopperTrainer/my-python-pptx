@@ -18,7 +18,8 @@ from pptx.shapes.shapetree import (
 )
 from pptx.shared import ElementProxy, ParentedElementProxy, PartElementProxy
 from pptx.util import lazyproperty
-
+from pptx.opc.packuri import PackURI
+import copy
 
 class _BaseSlide(PartElementProxy):
     """Base class for slide objects, including masters, layouts and notes."""
@@ -250,6 +251,11 @@ class Slide(_BaseSlide):
         """
         return self.part.slide_layout
 
+    def copy(self):
+        new_slide_part = self.part.package.presentation_part.new_slide(self.slide_layout)
+        # order goes from part -> related object (ex. slide_part -> slide not slide -> slide_part)
+        new_slide_part._element = copy.deepcopy(self.element)
+        return new_slide_part.slide
 
 class Slides(ParentedElementProxy):
     """
@@ -290,34 +296,65 @@ class Slides(ParentedElementProxy):
         Return a newly added slide that inherits layout from *slide_layout*.
         """
         rId, slide = self.part.add_slide(slide_layout)
+
         slide.shapes.clone_layout_placeholders(slide_layout)
         self._sldIdLst.add_sldId(rId)
-
         return slide
 
     def new_slide(self, slide_layout):
         """
-        Makes <Slide> object but doesn't add to the presentation.
-        It can be later appended into the presentation through
-        <Slides.append_slide> or <Slides.insert_slide>.
+        Return a new slide that inherits layout from *slide_layout*.
         :param slide_layout:
         :return:
+
         """
-        rId, slide = self.part.add_slide(slide_layout)
-        slide.shapes.clone_layout_placeholders(slide_layout)
-        print(self.part)
-        print(rId, slide)
-        rId, slide = self.part.add_slide(slide_layout)
-        print(rId, slide)
+        slide_part = self.part.new_slide(slide_layout)
+        slide_part.slide.shapes.clone_layout_placeholders(slide_layout)
+        return slide_part.slide
 
-        exit()
-        return slide
+    def insert_slide(self, idx, slide):
+        # find matching slide layout by name or set default as 0
+        prsnt = self.parent
+        slide_layout = prsnt.slide_layouts[0]
+        for sl in prsnt.slide_layouts:
+            if slide.slide_layout.name == sl.name:
+                slide_layout = sl
 
-    def insert_slide(self, i, slide):
-        pass
+        rId, new_slide = self.part.add_slide(slide_layout)
+        # slide.shapes.clone_layout_placeholders(slide_layout)
 
-    def append_slide(self,slide):
+        e = self._sldIdLst.add_sldId(rId)
+        self._sldIdLst.insert(idx,e) # this automakly removes old
+
+        new_slide._part._element = slide._part._element
+        new_slide._element = slide._element
+
+    def append_slide(self, slide):
         self.insert_slide(-1, slide)
+
+    def remove_slide(self, idx_or_slide):
+        if isinstance(idx_or_slide, int):
+            idx = idx_or_slide
+            del self._sldIdLst[idx]
+        elif isinstance(idx_or_slide, Slide):
+            slide = idx_or_slide
+            try:
+                sId = slide.slide_id
+                for i, sldId in enumerate(self._sldIdLst):
+                    if sldId.id == sId:
+                        del self._sldIdLst[i]
+                        break
+            except:
+                for id,s in self.part.package.presentation_part.related_parts.items():
+                    if isinstance(s, type(slide.part)):
+                        if s._element == slide._element:
+                            for i,sldId in enumerate(self._sldIdLst):
+                                if sldId.id == s.slide_id:
+                                    del self._sldIdLst[i]
+                                    break
+        else:
+            raise TypeError
+
 
     def get(self, slide_id, default=None):
         """

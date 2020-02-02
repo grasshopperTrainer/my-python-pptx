@@ -65,9 +65,13 @@ class _BaseShapes(ParentedElementProxy):
     include Slide, SlideLayout, and SlideMaster, providing common methods.
     """
 
+    @property
+    def _spTree(self):
+        return self._element
+
     def __init__(self, spTree, parent):
         super(_BaseShapes, self).__init__(spTree, parent)
-        self._spTree = spTree
+        # self._spTree = spTree
         self._cached_max_shape_id = None
 
     def __getitem__(self, idx):

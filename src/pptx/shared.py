@@ -5,7 +5,8 @@ Objects shared by pptx modules.
 """
 
 from __future__ import absolute_import, division, print_function, unicode_literals
-
+from pptx.opc.constants import RELATIONSHIP_TYPE as RT
+import copy
 
 class ElementProxy(object):
     """
@@ -87,6 +88,9 @@ class PartElementProxy(ElementProxy):
         super(PartElementProxy, self).__init__(element)
         self._part = part
 
+    # def __deepcopy__(self, memodict={}):
+    #     new_ins = self.__class__(self._element, copy.copy(self._part))
+    #     return new_ins
     @property
     def part(self):
         """

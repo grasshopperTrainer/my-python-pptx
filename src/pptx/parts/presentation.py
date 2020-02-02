@@ -19,15 +19,28 @@ class PresentationPart(XmlPart):
     Top level class in object model, represents the contents of the /ppt
     directory of a .pptx file.
     """
+    def new_slide(self, slide_layout):
+        """
+        Creates new temporary slide_part. Note that Slide has no relationship yet.
+        It's completely independent from presentation package.
+        :param slide_layout:
+        :return:
+        """
+        partname = PackURI(f'/pptx/slides/temp_slide')
+        slide_layout_part = slide_layout.part
+        slide_part = SlidePart.new(partname, self.package, slide_layout_part)
+        return slide_part
 
     def add_slide(self, slide_layout):
         """
         Return an (rId, slide) pair of a newly created blank slide that
         inherits appearance from *slide_layout*.
         """
-        partname = self._next_slide_partname
-        slide_layout_part = slide_layout.part
-        slide_part = SlidePart.new(partname, self.package, slide_layout_part)
+        slide_part = self.new_slide(slide_layout)
+        real_partname = self._next_slide_partname
+        slide_part._partname = real_partname
+
+        # here connection between presentation_part and slide_part is made
         rId = self.relate_to(slide_part, RT.SLIDE)
         return rId, slide_part.slide
 
